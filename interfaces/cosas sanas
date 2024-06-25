@@ -1,0 +1,32 @@
+el return correcto
+  return (
+    <div className="flex flex-wrap justify-center">
+      <p className="text-center text-white text-3xl mt-5 p-5 bg-primary border border-secondary rounded-xl opacity-90">
+        Tu Carrito:
+      </p>
+      {cartLS &&
+        cartLS.map((productJSON: any) => {
+          try {
+            const product = JSON.parse(productJSON);
+            return (
+              <div>
+                <CarritoProduct
+                  key={product.id}
+                  id={product.id}
+                  {...product}
+                  removeFromCart={() => removeFromCart(product.id)}
+                />
+                <button></button>
+              </div>
+            );
+          } catch (error) {
+            console.error("Error al analizar el producto JSON:", error);
+            return null;
+          }
+        })}
+      <ButtonToHome />
+    </div>
+  );
+};
+
+export default Carrito;

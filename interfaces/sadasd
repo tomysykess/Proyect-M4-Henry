@@ -1,0 +1,187 @@
+"use client";
+import { IProduct } from "@/types/types";
+import CarritoProduct from "../carritoProduct/CarritoProduct";
+import ButtonToHome from "../buttonToHome/ButtonToHome";
+import { useEffect, useState } from "react";
+
+const Carrito = () => {
+  const [productsLS, setProductsLS] = useState<
+    (IProduct | string)[] | undefined
+  >(undefined);
+  const [cartLS, setCartLS] = useState<IProduct[]>([]);
+
+  /* IMPORTANTÍSIMO ESTA FUNCION PARA ELIMINAR PRODUCTOS DEL CARRITO */
+  useEffect(() => {
+    const userSessionStr = localStorage.getItem("userSession");
+    const cartStr = localStorage.getItem("cart");
+    if (userSessionStr && cartStr) {
+      const userSession = JSON.parse(userSessionStr);
+      const cart = JSON.parse(cartStr);
+
+      if (userSession && userSession.userData && userSession.userData.orders) {
+        const orders = userSession.userData.orders;
+        // Ahora 'orders' es un array de objetos JavaScript
+        setProductsLS(orders); // Esto imprimirá el array de objetos de pedidos del localStorage
+      } else {
+        console.log("No se encontraron pedidos en userSession");
+      }
+    }
+  }, []);
+
+  const removeFromCart = (event) => {
+    const productId = event.target.id; // No necesitas parseInt si el id es un string
+    console.log("Eliminar producto del carrito con ID:", productId);
+
+    const cartStr = localStorage.getItem("cart");
+    console.log("Lo vamos a eliminar de aquí", cartStr);
+
+    if (cartStr) {
+      let cart = JSON.parse(cartStr);
+
+      if (cart) {
+        // Filtramos el array cart para eliminar el producto con el ID especificado
+        console.log(cart);
+        cart = cart.filter(
+          (product: any) => product.id.toString() !== productId.toString()
+        );
+        console.log(cart);
+
+        // Actualizamos el localStorage con el nuevo carrito
+        localStorage.setItem("cart", JSON.stringify(cart));
+
+        // Verificamos los cambios
+        console.log("Esto es cart después", cart);
+        setCartLS(cart);
+        alert("Se eliminó el producto del carrito");
+
+        /*  window.location.reload(); */
+      } else {
+        console.log("No se encontró el carrito en el localStorage");
+      }
+    } else {
+      console.log("No se encontró ningún carrito en el localStorage");
+    }
+  };
+
+  /*   console.log("esto es products", productsLS); */
+  return (
+    <div className="flex flex-wrap justify-center">
+      <p className="text-center text-white text-3xl mt-5 p-5 bg-primary border border-secondary rounded-xl opacity-90">
+        Tu Carrito:
+      </p>
+      {Array.isArray(productsLS) &&
+        (productsLS as string[]).map((productJSON: string) => {
+          try {
+            // Convertir el string JSON en un objeto JavaScript
+            const product = JSON.parse(productJSON);
+            // Renderizar el componente CarritoProduct con el objeto producto
+            return (
+              <div>
+                <CarritoProduct
+                  id={product.id}
+                  key={product.id} // Asegúrate de que cada CarritoProduct tenga un key único
+                  {...product}
+                  removeFromCart={() => removeFromCart(event)} // Pasar la función removeFromCart con el ID del producto como argumento
+                />
+                <button></button>
+              </div>
+            );
+          } catch (error) {
+            // Manejar errores de análisis JSON
+            console.error("Error al analizar el producto JSON:", error);
+            return null; // Otra opción sería renderizar un componente de error
+          }
+        })}
+      <ButtonToHome />
+    </div>
+  );
+};
+
+export default Carrito;
+/* const removeFromCart = (productID: string) => {
+    const userSessionStr = localStorage.getItem("userSession");
+    if (userSessionStr) {
+      const userSession = JSON.parse(userSessionStr);
+      if (userSession && userSession.userData && userSession.userData.orders) {
+        // Eliminar el producto del array de pedidos
+        userSession.userData.orders = userSession.userData.orders.filter(
+          (order: any) => order.id !== productID
+        );
+        // Actualizar el localStorage
+        localStorage.setItem("userSession", JSON.stringify(userSession));
+        // Actualizar el estado para reflejar los cambios
+        setProductsLS(userSession.userData.orders);
+        // Recargar la página para reflejar los cambios en la interfaz de usuario
+      }
+    }
+  }; */
+
+/* <CarritoProduct
+                id={product.id}
+                key={product.id}
+                {...product}
+                removeFromCart={() => removeFromCart(product.id)} // Pasar la función removeFromCart con el ID del producto como argumento
+              /> */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              try {
+                const cart: IProduct[] = cartLS;
+                let productIds: number[] = [];
+          
+                if (cart && cart.length > 0) {
+                  cart.forEach((item: any) => {
+                    const product = JSON.parse(item);
+                    /* el ID del producto y agregarlo al array de ids */
+                    productIds.push(product.id);
+                    console.log(productIds);
+                  });
+                }
+          
+                const userSessionStr = localStorage.getItem("userSession");
+                if (!userSessionStr) {
+                  console.error("No se encontró un token de autenticación");
+                } else {
+                  const userSession = JSON.parse(userSessionStr);
+                  const token = userSession.token;
+                  setToken(token);
+                }
+          
+                /* compra */
+          
+                 const status = await crearOrders(productIds, token);
+          
+                if (status === 200) {
+                  const userSessionStr = localStorage.getItem("userSession");
+                  const userSession = JSON.parse(userSessionStr!);
+                  const orders = userSession.userData.orders;
+                  localStorage.setItem("cart", JSON.stringify([]));
+                  alert("Compra realizada con éxito");
+                  window.location.reload();
+                } else {
+                  console.error("Error al realizar la compra");
+                }
+              } catch (error) {
+                console.error("Error al realizar la compra:", error);
+              }
